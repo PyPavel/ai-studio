@@ -1,34 +1,37 @@
 # AI Studio Factory
 
-A reusable template for spawning autonomous AI agent teams (Analyst -> R&D -> PM -> Senior -> Junior).
+A reusable template for spawning autonomous AI agent teams.
 
-Clone this repo, define your project in `config/studio.yaml`, run `./scripts/setup.sh`, and your studio is live.
+Clone this repo, define your project in `config/studio.yaml`, run `python3 scripts/setup.py`, and your studio is live.
 
 ## Quick Start
 
 ```bash
-git clone <repo-url> /home/pavel/tools/my-project-studio
-cd /home/pavel/tools/my-project-studio
+# 1. Clone or copy the template
+cp -r /home/pavel/tools/ai-studio /home/pavel/tools/my-studio
+cd /home/pavel/tools/my-studio
 
-# 1. Define your project
+# 2. Edit config with your project
 vim config/studio.yaml
 
-# 2. Bootstrap the studio
-./scripts/setup.sh
+# 3. Bootstrap (creates data files + cron jobs)
+python3 scripts/setup.py
 
-# 3. Trigger on demand
-./scripts/trigger.sh pm    # Run PM agent now
-./scripts/trigger.sh all   # Run full pipeline now
+# 4. Give your first directive
+vim data/user_directives.md
+
+# 5. Run PM now to process it
+./scripts/trigger.sh pm
 ```
 
 ## Project Structure
 
 ```
-.
+ai-studio/
 ├── config/
-│   └── studio.yaml              # Your project definition
+│   └── studio.yaml              # Project definition (edit this)
 ├── templates/
-│   ├── prompts/                 # Role prompt templates
+│   ├── prompts/                 # Agent role templates
 │   │   ├── analyst.md
 │   │   ├── rnd.md
 │   │   ├── pm.md
@@ -39,60 +42,131 @@ vim config/studio.yaml
 │       ├── studio_memory.md.tpl
 │       └── product_requirements.md.tpl
 ├── scripts/
-│   ├── setup.sh                 # One-time bootstrap
-│   ├── trigger.sh               # On-demand execution
-│   └── render_prompts.py        # Renders templates with config
-├── data/                        # Runtime data (created by setup)
-│   ├── user_directives.md
-│   ├── studio_memory.md
-│   ├── product_requirements.md
-│   └── sprint_results.md
-└── reports/                     # Generated reports
-    └── analyst/
+│   ├── setup.py                 # Bootstrap: render templates + create cron jobs
+│   ├── trigger.sh               # On-demand: ./trigger.sh pm
+│   └── render_prompts.py        # Render a single role prompt
+├── SKILLS_REFERENCE.md          # Which skills to use per role and project type
+├── data/                        # Created by setup.py (runtime data)
+│   ├── user_directives.md       # Write directives here for immediate action
+│   ├── studio_memory.md         # Studio state, backlog, rejected ideas
+│   ├── product_requirements.md  # APPROVED/NEEDS_DATA/REJECTED tasks
+│   └── sprint_results.md        # What Senior implemented this sprint
+└── reports/
+    └── analyst/                 # Daily reports from Analyst agent
 ```
 
-## How It Works
+## The 5-Agent Pipeline
 
-### The 5-Agent Pipeline
 | Agent | Schedule | Input | Output |
 |---|---|---|---|
 | **Analyst** | 06:00 | System logs + metrics | `reports/analyst/YYYY-MM-DD_report.md` |
-| **R&D** | 07:00 | Previous NEEDS_DATA + research tools | `data/rnd_findings.md` |
-| **PM** | 08:00 | R&D findings + Analyst report + Directives | `data/product_requirements.md` |
-| **Senior** | 10:00 | APPROVED tasks + Directives | `data/sprint_results.md` |
-| **Junior** | Every hour | System health | Status alerts + quick fixes |
+| **R&D** | 07:00 | NEEDS_DATA + research tools | `data/rnd_findings.md` |
+| **PM** | 08:00 | R&D findings + Directives + Analyst | `data/product_requirements.md` |
+| **Senior** | 10:00 | APPROVED tasks + Directives | `data/sprint_results.md` + Git commits |
+| **Junior** | Hourly | System health | Alerts + quick fixes |
 
-### Key Features
+**Timeline:** 06:00 → 07:00 → 08:00 → 10:00 → :00 every hour
 
-**Directives Pipeline** — You can write tasks directly to `data/user_directives.md` at any time. These bypass normal evaluation and are executed FIRST by the Senior agent.
+## Key Features
 
-**Zero Backlog Policy** — All APPROVED features must be implemented. No exceptions.
+### Directives Pipeline (Highest Priority)
+Write tasks to `data/user_directives.md` at any time. They bypass R&D/Analyst evaluation entirely.
 
-**On-Demand Trigger** — Run any agent manually with `./scripts/trigger.sh <agent>`.
+PM auto-APPROVES them → Senior executes FIRST → moved to "Completed Directives".
 
-## Customizing
+```markdown
+### D-1: Add dark mode toggle
+- **Domain:** frontend
+- **Description:** Add a dark/light theme toggle to the settings page
+- **Acceptance Criteria:** Toggle works, preference persists across sessions
+- **Date Added:** 2026-05-13
+```
 
-Edit `config/studio.yaml` to define:
-- Project name and description
-- Domains (what your app/system manages)
-- Schedule offsets
-- Skills per role
-- Health check endpoints
+### Zero Backlog Policy
+All APPROVED features must be implemented. No exceptions.
 
-The setup script reads this config and creates cron jobs automatically.
+### On-Demand Execution
+```bash
+./scripts/trigger.sh analyst   # Run only analyst
+./scripts/trigger.sh pm        # Run only PM
+./scripts/trigger.sh senior   # Run only Senior
+./scripts/trigger.sh all       # Run full pipeline (not built-in, chain manually)
+```
 
-## Example Projects
+## Roles & Skills Reference
 
-- **Trading Studio** — 4 traders (crypto, stock, forex, poly) with portfolios
-- **SaaS Builder** — Frontend + backend + marketing automation
-- **Content Factory** — YouTube scripts, thumbnails, scheduling
-- **Research Lab** — Paper analysis, hypothesis testing, report generation
+See `SKILLS_REFERENCE.md` for:
+- Which skills to use per role and project type
+- Core skills (every studio)
+- Domain-specific skills (trading, web, research, marketing, etc.)
+- Recommended configs for 3 project types
+
+Quick examples:
+
+**Trading Studio** — crypto, stock, forex, polymarket trading
+```
+analyst: support-analytics-reporter, ai-trader-system-logic, polars, networkx
+rnd: scientific-brainstorming, hypothesis-generation, arxiv, paper-lookup, database-lookup, polymarket, tradingagents-local-query
+pm: product-manager, product-sprint-prioritizer, finance-financial-analyst, polymarket
+senior: subagent-driven-development, engineering-code-reviewer, verification-before-completion
+junior: systematic-debugging, engineering-sre
+```
+
+**Web App Studio** — frontend + backend + marketing
+```
+analyst: support-analytics-reporter, marketing-daily-news-briefing
+rnd: brainstorming, hypothesis-generation, marketing-seo-specialist, marketing-growth-hacker
+pm: product-manager, product-sprint-prioritizer, marketing-content-creator
+senior: subagent-driven-development, engineering-frontend-developer, engineering-backend-architect
+junior: systematic-debugging, engineering-sre
+```
+
+## How to Define Your Project
+
+Edit `config/studio.yaml`:
+
+```yaml
+studio:
+  name: "My SaaS Studio"
+  description: "Autonomous team for building my SaaS product"
+
+project:
+  name: "My SaaS"
+  description: |
+    A B2B SaaS for task management with team collaboration,
+    Slack integration, and automated reporting.
+  domains:
+    - frontend
+    - backend_api
+    - integrations
+    - analytics
+
+health:
+  - name: "web-app"
+    url: "http://localhost:3000/health"
+  - name: "api"
+    url: "http://localhost:8080/api/health"
+
+schedule:
+  analyst: "0 6 * * *"
+  rnd: "0 7 * * *"
+  pm: "0 8 * * *"
+  senior: "0 10 * * *"
+  junior: "0 * * * *"
+
+skills:
+  analyst: [support-analytics-reporter]
+  rnd: [brainstorming, hypothesis-generation, marketing-seo-specialist, marketing-growth-hacker]
+  pm: [product-manager, product-sprint-prioritizer, brainstorming]
+  senior: [subagent-driven-development, engineering-code-reviewer, engineering-frontend-developer, engineering-backend-architect, verification-before-completion]
+  junior: [systematic-debugging, engineering-sre]
+```
 
 ## Rules
 
 1. **Use real LLM agents with skills** — never Python script stubs
 2. **Communicate via files** — agents pass work through `data/*.md`
-3. **Telegram summaries must be SHORT** (<3500 chars)
-4. **Verify before reporting** — always check `last_status` before claiming success
+3. **Telegram summaries SHORT** — max 3500 chars
+4. **Verify before reporting** — check `last_status` before claiming success
 5. **Zero Backlog** — all APPROVED features must be implemented
 6. **Git mandatory** — Senior commits every feature with conventional commits
