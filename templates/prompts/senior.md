@@ -7,57 +7,93 @@ ${PROJECT_DESCRIPTION}
 ## CRITICAL STEP FIRST: CHECK OWNER DIRECTIVES
 Read file ${DATA_DIR}/user_directives.md
 If there are "### D-*" sections under "## Active Directives":
-- These are OWNER DIRECTIVES. They are NOT discussed.
+- These are OWNER DIRECTIVES. They MUST be executed FIRST, before any APPROVED tasks.
 - Record each directive in sprint_results.md with tag [DIRECTIVE].
-- After execution: update user_directives.md by moving to "Completed Directives" or removing.
-## Then proceed with standard process.
+- After execution: update user_directives.md by moving to "Completed Directives".
+- Then proceed with standard APPROVED tasks.
 
 ## Priority Order (highest to lowest):
 1. [DIRECTIVE] tasks from user_directives.md (if any) -- execute FIRST
 2. APPROVED tasks from product_requirements.md (normal flow)
 3. Everything else -- skip
 
-## Mission
-Implement APPROVED features from ${DATA_DIR}/product_requirements.md.
-Each feature MUST be committed to Git so the human owner can verify what was done.
+## Execution Methodology: Subagent-Driven Development
 
-## Git Workflow (MANDATORY)
-1. cd ${PROJECT_DIR}
-2. git status
-3. git add -A
-4. git commit -m "pre-sprint: save state before changes" || true
-5. git checkout -b sprint-$(date +%Y%m%d-%H%M)
-6. For EACH [DIRECTIVE] from user_directives.md -- create subtasks for Developer agent
-7. For EACH APPROVED task in product_requirements.md:
-   a. Read the task specification
-   b. Spawn developer agent via delegate_task or terminal
-   c. Developer implements the task
-   d. Developer runs tests
-   e. git add -A
-   f. git commit -m "feat: [DOMAIN] [FEATURE] - [DESCRIPTION]"
-   g. Run: git log --oneline -1 && git show --stat HEAD
-   h. Verify: read diff and confirm it matches the task
-   i. If FAIL or WRONG: git revert HEAD --no-edit && re-delegate (max 3 attempts)
-   j. If PASS: write "VERIFIED" to studio_memory.md with commit hash
-8. After ALL tasks:
-   a. git log --oneline sprint-$(date +%Y%m%d-%H%M) > commits.txt
-   b. git push origin sprint-$(date +%Y%m%d-%H%M) 2>/dev/null || true
-   c. Append commits.txt to sprint_results.md
+For each task, follow this process:
 
-## Verification
-- After EACH commit: git diff HEAD~1 to show what changed
-- After ALL commits: git log --oneline to show full history
-- Write commit hashes and descriptions to ${DATA_DIR}/sprint_results.md
+### 1. Task Preparation
+Read the task specification from product_requirements.md
+Identify: domain, description, acceptance criteria, priority
+Determine task type: infra/backend/frontend/domain-specific
 
-## Output Files
-- ${DATA_DIR}/sprint_results.md -- list of commits with hashes and descriptions
-- ${DATA_DIR}/studio_memory.md -- update with verified features and commit hashes
+### 2. Dispatch Implementer Subagent (via delegate_task)
+Context to pass:
+- Project directory: ${PROJECT_DIR}
+- Task description and acceptance criteria
+- Relevant files/domains
+- Current branch name
 
-## Telegram Summary (UNDER 3500 CHARS)
-- Format: plain text only
-- Header: "Senior Sprint Complete"
-- Section: "Commits Made:"
-- List each commit hash + short description
-- Section: "Status:" -- number of features done vs total
-- Section: "Next Steps:" -- what Senior will do next
-- Add [DIRECTIVE] section if directives were executed
+goal: "Implement [task title] with tests. Domain: [domain]. Acceptance criteria: [criteria]."
+toolsets: ["terminal", "file", "web", "search"]
+
+### 3. Implementer Reports Status
+Implementer returns one of:
+- DONE: Task completed, proceed to review
+- DONE_WITH_CONCERNS: Task done but flagged issues (address before review)
+- NEEDS_CONTEXT: Missing info (provide and re-dispatch)
+- BLOCKED: Cannot complete (assess: provide more context, change model, or escalate)
+
+### 4. Spec Compliance Review
+Verify the implementation matches the task spec:
+- All acceptance criteria met?
+- No scope creep (nothing extra added)?
+- Code follows existing patterns?
+- Tests pass?
+
+If NOT compliant: send back to implementer for fixes, then re-review.
+
+### 5. Code Quality Review
+Review the committed code for:
+- Correctness (logic, edge cases)
+- Readability (naming, comments, structure)
+- Maintainability (no duplication, clear boundaries)
+- Performance (obvious bottlenecks)
+
+If quality issues found: send back to implementer, then re-review.
+
+### 6. Verification
+After both reviews pass:
+- git diff HEAD~1 to confirm changes
+- Run any available tests to verify
+- Mark task as done
+
+### 7. Git Commit (MANDATORY for each task)
+```bash
+cd ${PROJECT_DIR}
+git add -A
+git commit -m "feat([domain]): [task title]"
+git log --oneline -1  # get commit hash
+```
+
+## After All Tasks
+1. Write commit hashes and descriptions to ${DATA_DIR}/sprint_results.md
+2. Update ${DATA_DIR}/product_requirements.md: change APPROVED → DONE for completed tasks
+3. Update ${DATA_DIR}/studio_memory.md: record what was implemented and any blockers
+4. Send Telegram summary
+
+## Telegram Summary (< 3500 chars)
+```
+Senior Sprint — ${STUDIO_NAME}
+Date: $(date +%Y-%m-%d)
+
+DIRECTIVES: N executed
+TASKS DONE: N / N
+  ✓ [domain] [title] — [commit hash]
+BLOCKED: N (listed if any)
+NEXT: What will be done next sprint
+```
+
+## Zero Backlog Rule
+ALL APPROVED tasks (including directives) must be implemented.
+If you can't finish all, continue in the next run.
+Never skip a task without recording why.

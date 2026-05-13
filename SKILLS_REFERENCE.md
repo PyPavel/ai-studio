@@ -1,120 +1,94 @@
-# AI Studio — Skills Reference
+# Skills Reference — AI Studio
 
-This document maps Hermes skills to studio roles and project types.
-Use it to choose the right skills for your `config/studio.yaml`.
+Each role in the AI Studio uses specific skills. These skills are now **embedded inline** in the prompt templates (`templates/prompts/*.md`), so the template is fully self-contained. You don't need to install any skills separately.
 
-## How Skills Work in Studios
+However, if you want to use the **full Hermes skill versions** (with advanced features), install them with:
+```bash
+hermes skills install <skill-name>
+```
 
-1. Skills are listed in `config/studio.yaml` under `skills.<role>`.
-2. When a cron job runs, Hermes loads these skills automatically.
-3. Each skill contains instructions, pitfalls, and workflows the agent follows.
-4. **Only load skills relevant to your project** — extra skills waste tokens.
+---
 
-## Core Studio Skills (Every Studio)
+## Core Roles & Embedded Skills
 
-These skills apply to ANY project type:
+### Analyst → `templates/prompts/analyst.md`
+Embedded methodology from:
+- **support-analytics-reporter** — Daily health checks, metrics calculation, actionable reports
 
-| Skill | Best For | Description |
+### R&D → `templates/prompts/rnd.md`
+Embedded methodology from:
+- **scientific-brainstorming** — Explore-Question-Propose-Design-Approve cycle
+- **hypothesis-generation** — Structured hypothesis with evidence and validation plan
+
+### PM → `templates/prompts/pm.md`
+Embedded methodology from:
+- **product-manager** — RICE scoring, impact/effort analysis, decision matrix
+- **product-sprint-prioritizer** — Prioritization framework for sprint planning
+- **brainstorming** — Exploration and approach generation
+
+### Senior Developer → `templates/prompts/senior.md`
+Embedded methodology from:
+- **subagent-driven-development** — Per-task implementation + two-stage review (spec → quality)
+- **verification-before-completion** — Mandatory verification before claiming done
+
+### Junior Developer → `templates/prompts/junior.md`
+Embedded methodology from:
+- **systematic-debugging** — 4-phase root cause analysis (detect → understand → fix → verify)
+- **engineering-sre** — Site reliability practices, monitoring, quick fixes
+
+---
+
+## Optional Skills (for advanced use)
+
+If you want to enhance any role, install these additional skills:
+
+| Skill | Role | Purpose |
 |---|---|---|
-| `support-analytics-reporter` | Analyst | Calculate metrics, analyze logs, generate reports |
-| `product-manager` | PM | RICE/ROI analysis, prioritization, backlog management |
-| `product-sprint-prioritizer` | PM | Sprint planning, task ordering |
-| `subagent-driven-development` | Senior | Spawning and managing developer subagents |
-| `engineering-code-reviewer` | Senior | Code review before merging |
-| `requesting-code-review` | Senior/Junior | Pre-commit review workflow |
-| `verification-before-completion` | Senior/Junior | Verify work before reporting success |
-| `systematic-debugging` | Junior | Root cause debugging for fixes |
-| `engineering-sre` | Junior | Site reliability, health checks, incident response |
-| `brainstorming` | R&D/PM | Structured ideation before building |
-
-## Domain-Specific Skills
-
-### Web Applications
-| Skill | Role | Description |
-|---|---|---|
-| `engineering-frontend-developer` | Senior | React/Vue/Angular, UI implementation |
-| `engineering-backend-architect` | Senior | API design, database schema, server architecture |
-| `engineering-solidity-smart-contract-engineer` | Senior | Web3/blockchain apps |
-| `engineering-minimal-change-engineer` | Senior | Surgical changes only |
-| `testing-accessibility-auditor` | Senior | WCAG compliance testing |
-| `testing-api-tester` | Senior | API endpoint testing |
-
-### Trading & Finance
-| Skill | Role | Description |
-|---|---|---|
-| `ai-trader-system-logic` | All | Trading studio architecture knowledge |
-| `tradingagents-local-query` | R&D/PM | Stock analysis via TradingAgents |
-| `polymarket` | R&D/PM | Prediction market screening |
-| `finance-investment-researcher` | R&D | Fundamental analysis |
-| `finance-financial-analyst` | PM | Financial metrics analysis |
-| `statistical-analysis` | R&D | Hypothesis testing, backtesting |
-| `polars` | R&D/Analyst | Fast DataFrame operations |
-| `networkx` | R&D | Cross-asset correlation analysis |
-
-### Research & Science
-| Skill | Role | Description |
-|---|---|---|
-| `scientific-brainstorming` | R&D | Open-ended research ideation |
-| `hypothesis-generation` | R&D | Structured hypothesis formulation |
+| `engineering-code-reviewer` | Senior | Advanced code review with security and performance checks |
+| `requesting-code-review` | Senior/Junior | Structured code review request templates |
+| `finishing-a-development-branch` | Senior | Clean branch completion, merge, PR creation |
+| `writing-plans` | Senior | Detailed implementation planning |
+| `executing-plans` | Senior | Alternative to subagent-driven-development |
+| `marketing-seo-specialist` | R&D/PM | SEO research and optimization |
+| `marketing-content-creator` | PM | Content strategy and creation |
+| `marketing-growth-hacker` | R&D | Growth experiments and user acquisition |
 | `arxiv` | R&D | Academic paper search |
-| `paper-lookup` | R&D | 10 paper databases via REST |
-| `database-lookup` | R&D | 78 public databases (FRED, SEC, etc.) |
-| `scientific-critical-thinking` | R&D | Evidence quality evaluation |
-| `timesfm-forecasting` | R&D | Time-series predictions |
-| `usfiscaldata` | R&D | US Treasury fiscal data |
+| `paper-lookup` | R&D | Multi-database paper search |
+| `database-lookup` | R&D | Scientific data APIs |
+| `tradingagents-local-query` | Analyst | Stock analysis (if trading studio) |
+| `polars` | Analyst | Fast DataFrame analysis |
+| `networkx` | Analyst | Network/graph analysis |
 
-### Marketing & Growth
-| Skill | Role | Description |
-|---|---|---|
-| `marketing-seo-specialist` | R&D | SEO optimization, keyword research |
-| `marketing-content-creator` | R&D/PM | Content strategy and creation |
-| `marketing-growth-hacker` | R&D | Low-cost acquisition experiments |
-| `marketing-daily-news-briefing` | Analyst | News collection and summarization |
-| `marketing-social-media-strategist` | R&D | Social platform strategy |
-| `finance-fraud-detector` | Analyst | Fraud detection in transactions |
+---
 
-### DevOps & Infrastructure
-| Skill | Role | Description |
-|---|---|---|
-| `engineering-devops-automator` | Senior/Junior | CI/CD, cloud infrastructure |
-| `engineering-git-workflow-master` | Senior | Branch strategies, conventional commits |
-| `testing-performance-benchmarker` | Senior | Load testing, capacity planning |
-| `9router` | Junior | AI gateway management |
+## Domain-Specific Skill Combinations
 
-## Anti-Patterns (Do NOT Load These Together)
-
-- `polymarket` + `tradingagents-local-query` for non-trading projects — waste of tokens
-- `scientific-brainstorming` for simple web apps — overkill, use `brainstorming` instead
-- Loading 20+ skills per agent — keep it under 8-10 for most roles
-
-## Recommended Role Configs by Project Type
-
-### Trading Studio (Current)
+### Trading Studio
 ```yaml
 skills:
-  analyst: [support-analytics-reporter, ai-trader-system-logic, polars, networkx]
-  rnd: [scientific-brainstorming, hypothesis-generation, arxiv, paper-lookup, database-lookup, polymarket, tradingagents-local-query, statistical-analysis, finance-investment-researcher, polars, networkx, usfiscaldata]
-  pm: [product-manager, product-sprint-prioritizer, finance-financial-analyst, polymarket, tradingagents-local-query, hypothesis-generation, brainstorming]
-  senior: [subagent-driven-development, engineering-code-reviewer, requesting-code-review, ai-trader-system-logic, verification-before-completion]
-  junior: [ai-trader-system-logic, systematic-debugging, requesting-code-review, engineering-sre]
+  analyst: [support-analytics-reporter, tradingagents-local-query, polars, networkx]
+  rnd: [scientific-brainstorming, hypothesis-generation, arxiv, paper-lookup, database-lookup, polymarket, tradingagents-local-query]
+  pm: [product-manager, product-sprint-prioritizer, finance-financial-analyst, polymarket]
+  senior: [subagent-driven-development, engineering-code-reviewer, verification-before-completion]
+  junior: [systematic-debugging, engineering-sre]
 ```
 
-### Web Application Studio
+### Web App Studio
 ```yaml
 skills:
-  analyst: [support-analytics-reporter, marketing-daily-news-briefing, polars]
-  rnd: [brainstorming, hypothesis-generation, marketing-seo-specialist, marketing-content-creator, marketing-growth-hacker]
-  pm: [product-manager, product-sprint-prioritizer, brainstorming]
-  senior: [subagent-driven-development, engineering-code-reviewer, requesting-code-review, engineering-frontend-developer, engineering-backend-architect, verification-before-completion]
-  junior: [systematic-debugging, requesting-code-review, engineering-sre]
+  analyst: [support-analytics-reporter, marketing-daily-news-briefing]
+  rnd: [brainstorming, hypothesis-generation, marketing-seo-specialist, marketing-growth-hacker]
+  pm: [product-manager, product-sprint-prioritizer, marketing-content-creator]
+  senior: [subagent-driven-development, engineering-frontend-developer, engineering-backend-architect, verification-before-completion]
+  junior: [systematic-debugging, engineering-sre]
 ```
 
-### Research Lab Studio
+### Research Studio
 ```yaml
 skills:
-  analyst: [support-analytics-reporter, polars]
-  rnd: [scientific-brainstorming, hypothesis-generation, arxiv, paper-lookup, database-lookup, scientific-critical-thinking, statistical-analysis, timesfm-forecasting]
-  pm: [product-manager, product-sprint-prioritizer, brainstorming]
-  senior: [subagent-driven-development, engineering-code-reviewer, requesting-code-review, verification-before-completion]
+  analyst: [support-analytics-reporter, scientific-critical-thinking, statistical-analysis]
+  rnd: [scientific-brainstorming, hypothesis-generation, arxiv, paper-lookup, database-lookup, timesfm-forecasting]
+  pm: [product-manager, product-sprint-prioritizer]
+  senior: [subagent-driven-development, engineering-data-engineer, verification-before-completion]
   junior: [systematic-debugging, engineering-sre]
 ```
