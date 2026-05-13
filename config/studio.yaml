@@ -1,0 +1,71 @@
+# AI Studio Configuration
+# Edit this file for your project, then run: ./scripts/setup.py
+
+studio:
+  name: "Passive Income Web App"
+  description: "Studio for building automated passive income web application with affiliate marketing, ad revenue, and subscription tiers."
+
+project:
+  name: "Passive Income Web App"
+  description: |
+    Build a web application that generates passive income through multiple streams:
+    - Affiliate marketing links with tracking
+    - Display ad revenue optimization
+    - Premium subscription tiers
+    - Content aggregation and SEO optimization
+    - Automated email marketing funnels
+  domains:
+    - web_frontend
+    - backend_api
+    - marketing_automation
+    - seo_analytics
+    - email_funnels
+
+health:
+  - name: "web-app"
+    url: "http://localhost:3000/health"
+  - name: "api-server"
+    url: "http://localhost:8080/api/health"
+  - name: "marketing-service"
+    url: "http://localhost:8081/health"
+
+schedule:
+  analyst: "0 6 * * *"
+  rnd: "0 7 * * *"
+  pm: "0 8 * * *"
+  senior: "0 10 * * *"
+  junior: "0 * * * *"
+
+skills:
+  analyst:
+    - support-analytics-reporter
+    - marketing-daily-news-briefing
+  rnd:
+    - scientific-brainstorming
+    - hypothesis-generation
+    - arxiv
+    - paper-lookup
+    - database-lookup
+    - marketing-seo-specialist
+    - marketing-content-creator
+    - marketing-growth-hacker
+    - finance-investment-researcher
+  pm:
+    - product-manager
+    - product-sprint-prioritizer
+    - marketing-content-creator
+    - brainstorming
+  senior:
+    - subagent-driven-development
+    - engineering-code-reviewer
+    - requesting-code-review
+    - engineering-frontend-developer
+    - engineering-backend-architect
+    - verification-before-completion
+  junior:
+    - systematic-debugging
+    - requesting-code-review
+    - engineering-sre
+
+delivery:
+  type: "all"
